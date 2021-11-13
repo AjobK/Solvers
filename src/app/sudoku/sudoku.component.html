@@ -1,0 +1,23 @@
+<section>
+    <h1>
+        Sudoku solver
+    </h1>
+    <div class="board">
+        <div *ngFor="let sudokuRow of viewedSudoku; let y = index" class="row">
+            <input
+                *ngFor="let item of sudokuRow; let x = index"
+                type="text"
+                min="1"
+                max="9"
+                maxlength="1"
+                value="{{ item || '' }}"
+                oninput="this.value=this.value.replace(/[^1-9]/g,'');"
+                (input)="addToSudoku({ x: x, y: y }, $event)"
+            />
+        </div>
+    </div>
+    <div class="buttonWrapper">
+        <button class="reset" (click)="reset()">Reset</button>
+        <button class="solve" (click)="solve()">Solve</button>
+    </div>
+</section>
