@@ -36,12 +36,9 @@ export class SudokuComponent implements OnInit {
   // When a sudoku has been solver you can see the steps with this array
   public sudokuSteps: Array<Array<Array<number>>> = []
 
-  constructor() { }
-
   ngOnInit(): void { }
 
   getSudoku(): Array<Array<number>> {
-    console.log('GET ITTT')
     return this.sudoku
   }
 
@@ -54,73 +51,121 @@ export class SudokuComponent implements OnInit {
     let isDone = false
     let isStuck = false
 
-    this.printSudoku(this.sudoku)
-
-    console.log(this.sudoku)
-
     for (let passes = 1; !isDone && !isStuck; passes++) {
-        isDone = true
-        isStuck = true
+      isDone = true
+      isStuck = true
 
-        for (let y = 0; y < 9; y++) {
-            for (let x = 0; x < 9; x++) {
-                if (this.sudoku[y][x] != 0) continue
+      let possibilitiesGrid: any = []
 
-                isDone = false
-                
-                let possibleNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+      for (let y = 0; y < 9; y++) {
+        let possibilitiesRow = []
 
-                // Horizontal check
-                for (let rowPos = 0; rowPos < 9 && possibleNumbers.length != 0; rowPos++) {
-                    let currVal = this.sudoku[y][rowPos]
+        for (let x = 0; x < 9; x++) {
+          let possibleNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
-                    if (currVal != 0 && possibleNumbers.indexOf(currVal) != -1)
-                        possibleNumbers.splice(possibleNumbers.indexOf(currVal), 1)  
+          if (this.sudoku[y][x] != 0) {
+            possibilitiesRow.push([])
+            continue
+          }
+
+          isDone = false
+          
+
+          // Horizontal check
+          for (let rowPos = 0; rowPos < 9 && possibleNumbers.length > 0; rowPos++) {
+            let currVal = this.sudoku[y][rowPos]
+
+            if (currVal != 0 && possibleNumbers.indexOf(currVal) != -1)
+              possibleNumbers.splice(possibleNumbers.indexOf(currVal), 1)  
+          }
+
+          // Vertical check
+          for (let colPos = 0; colPos < 9 && possibleNumbers.length > 0; colPos++) {
+            let currVal = this.sudoku[colPos][x]
+
+            if (currVal != null && possibleNumbers.indexOf(currVal) != -1)
+              possibleNumbers.splice(possibleNumbers.indexOf(currVal), 1)  
+          }
+
+          // Square check
+          let checkStartPosX = ~~(x / 3) * 3
+          let checkStartPosY = ~~(y / 3) * 3
+
+          let currSquare = [
+            ...this.sudoku[checkStartPosY].slice(checkStartPosX, checkStartPosX + 3),
+            ...this.sudoku[checkStartPosY + 1].slice(checkStartPosX, checkStartPosX + 3),
+            ...this.sudoku[checkStartPosY + 2].slice(checkStartPosX, checkStartPosX + 3)
+          ]
+
+          for (let i = 0; i < currSquare.length && possibleNumbers.length > 0; i++) {
+            let currVal = currSquare[i]
+
+            if (currVal != 0 && possibleNumbers.indexOf(currVal) != -1)
+              possibleNumbers.splice(possibleNumbers.indexOf(currVal), 1)
+          }
+
+          if (possibleNumbers.length == 1) {
+            isStuck = false
+            this.sudoku[y][x] = possibleNumbers[0]
+            possibilitiesRow.push([])
+          } else {
+            possibilitiesRow.push([...possibleNumbers])
+          }
+        }
+
+        possibilitiesGrid.push(possibilitiesRow)
+      }
+
+      // Check possibilities per grid
+      for (let y = 0; y < 9; y += 3) {
+        for (let x = 0; x < 9; x += 3) {
+          let takenNumbersInSquare = [
+            ...this.sudoku[y].slice(x, x+3),
+            ...this.sudoku[y+1].slice(x, x+3),
+            ...this.sudoku[y+2].slice(x, x+3)
+          ].filter((i) => i != 0)
+
+          let possibleNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9].filter((i) => takenNumbersInSquare.indexOf(i) == -1)
+
+          let allCombinations = [
+            possibilitiesGrid[y].slice(x, x+3),
+            possibilitiesGrid[y+1].slice(x, x+3),
+            possibilitiesGrid[y+2].slice(x, x+3)
+          ]
+
+          possibleNumbers.forEach((possibleNumber) => {
+            let multipleOptions = false
+            let putAtCoords: any = []
+
+            allCombinations.forEach((row, innerY) => {
+              row.forEach((possibilitiesInField: any, innerX: any) => {
+                let numberIsPossibleInField = possibilitiesInField.indexOf(possibleNumber) != -1
+
+                if (!multipleOptions && numberIsPossibleInField) {
+                  if (putAtCoords.length == 0) {
+                    putAtCoords = [x + innerX, y + innerY]
+                  } else if (putAtCoords.length > 0) {
+                    multipleOptions = true
+                  }
                 }
+              })
+            })
 
-                // Vertical check
-                for (let colPos = 0; colPos < 9 && possibleNumbers.length != 0; colPos++) {
-                    let currVal = this.sudoku[colPos][x]
-
-                    if (currVal != null && possibleNumbers.indexOf(currVal) != -1)
-                        possibleNumbers.splice(possibleNumbers.indexOf(currVal), 1)  
-                }
-
-                // Square check
-                let checkStartPosX = ~~(x / 3) * 3
-                let checkStartPosY = ~~(y / 3) * 3
-
-                let currSquare = [
-                    ...this.sudoku[checkStartPosY].slice(checkStartPosX, checkStartPosX + 3),
-                    ...this.sudoku[checkStartPosY + 1].slice(checkStartPosX, checkStartPosX + 3),
-                    ...this.sudoku[checkStartPosY + 2].slice(checkStartPosX, checkStartPosX + 3)
-                ]
-
-                for (let i = 0; i < currSquare.length; i++) {
-                    let currVal = currSquare[i]
-
-                    if (currVal != 0 && possibleNumbers.indexOf(currVal) != -1)
-                        possibleNumbers.splice(possibleNumbers.indexOf(currVal), 1)
-                }
-
-                if (possibleNumbers.length == 1) {
-                    isStuck = false
-                    this.sudoku[y][x] = possibleNumbers[0]
-                }
+            if (!multipleOptions && putAtCoords.length >= 2) {
+              allCombinations[putAtCoords[1] - y][putAtCoords[0] - x].length = 0
+              this.sudoku[putAtCoords[1]][putAtCoords[0]] = possibleNumber
             }
+          })
         }
+      }
 
-        if (!isDone && isStuck)  {
-            console.log(`[ERROR!!] Got stuck at ${passes} passes\n`)
-        } else if (isDone) {
-            console.log(`[SUCCESS] Done after ${passes} passes\n`)
-        } else {
-            // console.log(`\n[STEP ${passes}]\n`)
-            // this.printSudoku(this.sudoku)
-            // console.log('\n')
-        }
+      if (!isDone && isStuck)
+          console.log(`[ERROR!!] Got stuck at ${passes} passes\n`)
+      else if (isDone)
+          console.log(`[SUCCESS] Done after ${passes} passes\n`)
 
-        this.viewedSudoku = JSON.parse(JSON.stringify(this.sudoku))
+      this.viewedSudoku = JSON.parse(JSON.stringify(this.sudoku))
+      this.printSudoku(this.sudoku)
     }
   }
 
@@ -137,7 +182,7 @@ export class SudokuComponent implements OnInit {
         newPrintArr.push(` ${sudoku[y].join(' | ')} `)
     }
 
-    console.log(newPrintArr.join('\n---+---+---+---+---+---+---+---+---\n'))
+    console.log(newPrintArr.join(`\n${new Array(sudoku.length-1).fill('---+').join('')}---\n`))
   }
 
   addToSudoku(coords: any, value: any) {
