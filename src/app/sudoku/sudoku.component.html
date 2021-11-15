@@ -20,4 +20,7 @@
         <button class="reset" (click)="reset()">Reset</button>
         <button class="solve" (click)="solve()">Solve</button>
     </div>
+    <div class="toast" [ngClass]="{ show: !!toastMessage }">
+       {{ toastMessage || ' ' }}
+    </div>
 </section>

@@ -6,6 +6,9 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./sudoku.component.scss']
 })
 export class SudokuComponent implements OnInit {
+  public toastTimeout: any
+  public toastMessage: String = ''
+
   // Starts out with dummy sudoku
   // public viewedSudoku: Array<Array<number>> = [
   //   [5, 3, 0, 0, 7, 0, 0, 0, 0],
@@ -40,6 +43,15 @@ export class SudokuComponent implements OnInit {
 
   getSudoku(): Array<Array<number>> {
     return this.sudoku
+  }
+
+  setToastMessage(message: string, duration: number = 3000): void {
+    if (this.toastTimeout) clearTimeout(this.toastTimeout)
+
+    this.toastMessage = message
+    this.toastTimeout = setTimeout(() => {
+      this.toastMessage = ''
+    }, duration + 500)
   }
 
   reset() {
@@ -160,9 +172,9 @@ export class SudokuComponent implements OnInit {
       }
 
       if (!isDone && isStuck)
-          console.log(`[ERROR!!] Got stuck at ${passes} passes\n`)
+          this.setToastMessage(`Got stuck at ${passes} passes...`)
       else if (isDone)
-          console.log(`[SUCCESS] Done after ${passes} passes\n`)
+          this.setToastMessage(`Solved after ${passes} passes!`)
 
       this.viewedSudoku = JSON.parse(JSON.stringify(this.sudoku))
       this.printSudoku(this.sudoku)
